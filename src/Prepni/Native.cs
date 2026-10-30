@@ -41,7 +41,20 @@ internal static class Native
     public const uint KEYEVENTF_KEYUP = 0x2;
     public const uint KEYEVENTF_UNICODE = 0x4;
 
+    public const uint SPI_GETSTICKYKEYS = 0x003A;
+    public const uint SPI_SETSTICKYKEYS = 0x003B;
+    public const uint SKF_STICKYKEYSON = 0x1;
+    public const uint SKF_HOTKEYACTIVE = 0x4;
+    public const uint SKF_CONFIRMHOTKEY = 0x8;
+
     public delegate nint HookProc(int code, nint wParam, nint lParam);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct STICKYKEYS
+    {
+        public uint cbSize;
+        public uint dwFlags;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct KBDLLHOOKSTRUCT
@@ -131,6 +144,9 @@ internal static class Native
 
     [DllImport("user32.dll")]
     public static extern bool PostMessage(nint hWnd, int msg, nint wParam, nint lParam);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref STICKYKEYS pvParam, uint fWinIni);
 
     public static bool IsDown(int virtualKey) => (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
 }

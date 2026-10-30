@@ -14,6 +14,7 @@ internal sealed class TrayApp : ApplicationContext
     private readonly Layouts _layouts = new();
     private readonly KeyboardWatcher _watcher;
     private readonly NotifyIcon _icon;
+    private readonly StickyKeysShortcut _stickyKeys = new();
 
     // Přepis se nesmí dělat uvnitř háčku klávesnice; přes skryté okno ho odložíme až za něj.
     private readonly Control _invoker = new();
@@ -80,6 +81,7 @@ internal sealed class TrayApp : ApplicationContext
     protected override void ExitThreadCore()
     {
         _watcher.Dispose();
+        _stickyKeys.Dispose();
         _icon.Visible = false;
         _icon.Dispose();
         _invoker.Dispose();
