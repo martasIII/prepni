@@ -4,7 +4,7 @@ using Prepni.Core;
 namespace Prepni;
 
 /// <summary>Rozložení klávesnice nainstalované ve Windows; znaky dává ToUnicodeEx, stejně jako při psaní.</summary>
-internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
+internal sealed unsafe class WindowsLayout(nint handle) : IKeyboardLayout
 {
     public nint Handle { get; } = handle;
 
@@ -13,11 +13,12 @@ internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
 
     public KeyOutput Type(Keystroke key)
     {
-        var virtualKey = Native.MapVirtualKeyEx(key.ScanCode, Native.MAPVK_VSC_TO_VK_EX, Handle);
+        var virtualKey = Native.MapVirtualKeyExW(key.ScanCode, Native.MAPVK_VSC_TO_VK_EX, Handle);
         if (virtualKey == 0)
             return KeyOutput.None;
 
-        var state = new byte[256];
+        var state = stackalloc byte[256];
+        new Span<byte>(state, 256).Clear();
         if (key.Shift)
             state[Native.VK_SHIFT] = 0x80;
         if (key.AltGr)
@@ -28,9 +29,8 @@ internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
         if (key.CapsLock)
             state[Native.VK_CAPITAL] = 0x01;
 
-        var buffer = new char[8];
-        var count = Native.ToUnicodeEx(virtualKey, key.ScanCode, state, buffer, buffer.Length,
-            Native.ToUnicodeDontChangeState, Handle);
+        var buffer = stackalloc char[8];
+        var count = Native.ToUnicodeEx(virtualKey, key.ScanCode, state, buffer, 8, Native.ToUnicodeDontChangeState, Handle);
 
         return count switch
         {
@@ -42,7 +42,7 @@ internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
 
     public Keystroke? Find(char c)
     {
-        var result = Native.VkKeyScanEx(c, Handle);
+        var result = Native.VkKeyScanExW(c, Handle);
         if (result == -1)
             return null;
 
@@ -52,7 +52,7 @@ internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
         if (!altGr && (modifiers & 6) != 0)
             return null;
 
-        var scanCode = Native.MapVirtualKeyEx((uint)(result & 0xFF), Native.MAPVK_VK_TO_VSC, Handle);
+        var scanCode = Native.MapVirtualKeyExW((uint)(result & 0xFF), Native.MAPVK_VK_TO_VSC, Handle);
         return scanCode == 0 ? null : new Keystroke((ushort)scanCode, (modifiers & 1) != 0, altGr);
     }
 
@@ -70,7 +70,7 @@ internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
 }
 
 /// <summary>Nainstalovaná rozložení; pro stejné HKL vrací vždy stejný objekt.</summary>
-internal sealed class Layouts
+internal sealed unsafe class Layouts
 {
     private readonly Dictionary<nint, WindowsLayout> _cache = [];
 
@@ -82,10 +82,12 @@ internal sealed class Layouts
     public WindowsLayout? Other(WindowsLayout current)
     {
         var count = Native.GetKeyboardLayoutList(0, null);
-        var list = new nint[count];
-        Native.GetKeyboardLayoutList(count, list);
         if (count < 2)
             return null;
+
+        var list = new nint[count];
+        fixed (nint* pointer = list)
+            Native.GetKeyboardLayoutList(count, pointer);
 
         var index = Array.IndexOf(list, current.Handle);
         return Get(list[(index + 1) % count]);

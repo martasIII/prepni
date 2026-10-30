@@ -1,3 +1,5 @@
+<img src="assets/prepni-256.png" width="96" align="right" alt="">
+
 # Přepni
 
 Napsal jsi `slo6it8`, protože byla zapnutá anglická klávesnice? **Dvakrát klepni na Shift** a z textu bude
@@ -9,8 +11,9 @@ převede se celý. A když se oprava nepovede, vrátí ji Ctrl+Z.
 
 ## Stažení
 
-Hotový `Prepni.exe` je u [posledního vydání](../../releases/latest): jeden soubor, nic se neinstaluje, .NET je
-uvnitř. Po spuštění se objeví ikonka ⇄ v oznamovací oblasti; v její nabídce jde zapnout spouštění s Windows.
+Hotový `Prepni.exe` je u [posledního vydání](../../releases/latest): jeden soubor kolem 1,5 MB, nic se
+neinstaluje a .NET není potřeba. Po spuštění se objeví ikonka v oznamovací oblasti; v její nabídce jde zapnout
+spouštění s Windows.
 
 Soubor zatím není digitálně podepsaný, takže Windows při prvním spuštění můžou ukázat varování SmartScreen
 („Další informace“ → „Přesto spustit“). Kdo nechce věřit cizímu exe, může si ho postavit sám, viz níž.
@@ -25,7 +28,7 @@ QWERTZ i QWERTY, programátorské, německé…
 | Projekt | Co obsahuje |
 |---|---|
 | `src/Prepni.Core` | Převod kláves mezi rozloženími, skládání mrtvých kláves (čárka, háček), poslední slova. Bez Windows, pokryté testy. |
-| `src/Prepni` | Aplikace v oznamovací oblasti: háček klávesnice, dvojí Shift, přepis přes `SendInput`. |
+| `src/Prepni` | Aplikace v oznamovací oblasti přímo nad Win32 (bez WinForms): háček klávesnice, dvojí Shift, přepis přes `SendInput`, schránka. Překládá se dopředu (Native AOT): malý exe, okamžitý start, kolem 14 MB paměti. |
 | `tests/Prepni.Core.Tests` | Unit testy (xUnit). |
 
 ## Soukromí
@@ -48,7 +51,8 @@ dotnet run --project src/Prepni
 
 Vydání: tag `v*` (třeba `git tag v0.1.0 && git push --tags`) postaví `Prepni.exe` a přiloží ho k vydání.
 
-Ikonka ⇄ se objeví v oznamovací oblasti; pravým tlačítkem jde pozastavit nebo ukončit.
+Ikonka se objeví v oznamovací oblasti; klepnutím na ni jde pozastavit nebo ukončit. Vydání přes Native AOT
+(`dotnet publish src/Prepni -c Release -r win-x64`) potřebuje C++ nástroje Visual Studia.
 
 ## Co zatím neumí
 
@@ -58,6 +62,8 @@ Ikonka ⇄ se objeví v oznamovací oblasti; pravým tlačítkem jde pozastavit 
 - Oprava se nijak nezvýrazní; zatím je vidět jen v popisku ikonky.
 - Ve Visual Studiu a VS Code kopíruje Ctrl+C bez označení celý řádek; to aplikace pozná a nic nepřepíše.
   Jiné editory s podobným chováním zatím nezná.
+
+Mimochodem: kdo napíše název na anglické klávesnici, dostane `P5epni`. I to Přepni opraví.
 
 ## Licence
 

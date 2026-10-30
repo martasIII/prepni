@@ -1,6 +1,6 @@
 name: Vydání
 
-# Tag v* (třeba v0.1.0) postaví samostatný Prepni.exe a přiloží ho k vydání na GitHubu.
+# Tag v* (třeba v0.1.0) postaví Prepni.exe (Native AOT, bez .NET runtime) a přiloží ho k vydání na GitHubu.
 on:
   push:
     tags: ['v*']
@@ -23,9 +23,7 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ github.ref_name }}'.TrimStart('v')
-          dotnet publish src/Prepni -c Release -r win-x64 --self-contained `
-            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=$version -o publish
+          dotnet publish src/Prepni -c Release -r win-x64 -p:Version=$version -o publish
       - uses: softprops/action-gh-release@v2
         with:
           files: publish/Prepni.exe

@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace Prepni;
 
 /// <summary>
@@ -8,23 +6,24 @@ namespace Prepni;
 /// doporučuje hrám: změna se neukládá, po odhlášení platí zase původní nastavení. Kdo Jedno stisknutí používá,
 /// tomu ho nevypínáme.
 /// </summary>
-internal sealed class StickyKeysShortcut : IDisposable
+internal sealed unsafe class StickyKeysShortcut : IDisposable
 {
     private readonly Native.STICKYKEYS _original;
     private readonly bool _changed;
 
     public StickyKeysShortcut()
     {
-        _original = new Native.STICKYKEYS { cbSize = (uint)Marshal.SizeOf<Native.STICKYKEYS>() };
-        if (!Native.SystemParametersInfo(Native.SPI_GETSTICKYKEYS, _original.cbSize, ref _original, 0))
+        var original = new Native.STICKYKEYS { cbSize = (uint)sizeof(Native.STICKYKEYS) };
+        if (!Native.SystemParametersInfoW(Native.SPI_GETSTICKYKEYS, original.cbSize, &original, 0))
             return;
 
-        if ((_original.dwFlags & Native.SKF_STICKYKEYSON) != 0)
+        _original = original;
+        if ((original.dwFlags & Native.SKF_STICKYKEYSON) != 0)
             return;
 
-        var withoutShortcut = _original;
+        var withoutShortcut = original;
         withoutShortcut.dwFlags &= ~(Native.SKF_HOTKEYACTIVE | Native.SKF_CONFIRMHOTKEY);
-        _changed = Native.SystemParametersInfo(Native.SPI_SETSTICKYKEYS, withoutShortcut.cbSize, ref withoutShortcut, 0);
+        _changed = Native.SystemParametersInfoW(Native.SPI_SETSTICKYKEYS, withoutShortcut.cbSize, &withoutShortcut, 0);
 
         // I při pádu aplikace vrátit, co jsme změnili.
         if (_changed)
@@ -37,6 +36,6 @@ internal sealed class StickyKeysShortcut : IDisposable
             return;
 
         var original = _original;
-        Native.SystemParametersInfo(Native.SPI_SETSTICKYKEYS, original.cbSize, ref original, 0);
+        Native.SystemParametersInfoW(Native.SPI_SETSTICKYKEYS, original.cbSize, &original, 0);
     }
 }

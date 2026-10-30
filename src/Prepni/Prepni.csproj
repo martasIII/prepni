@@ -8,8 +8,17 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon>..\..\assets\prepni.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- Native AOT: jeden malý exe bez .NET runtime, rychlý start a málo paměti pro aplikaci, která běží celý den. -->
+    <PublishAot>true</PublishAot>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <StackTraceSupport>false</StackTraceSupport>
+
     <Version>0.1.0</Version>
     <Product>Přepni</Product>
     <Description>Dvakrát Shift přepíše text napsaný ve špatném rozložení klávesnice.</Description>

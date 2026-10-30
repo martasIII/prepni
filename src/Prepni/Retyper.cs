@@ -1,10 +1,9 @@
-using System.Runtime.InteropServices;
 using Prepni.Core;
 
 namespace Prepni;
 
 /// <summary>Píše do aktivního okna: maže Backspacem, píše znaky Unicode a posílá zkratky jako Ctrl+C.</summary>
-internal static class Retyper
+internal static unsafe class Retyper
 {
     private const char Tab = (char)9;
 
@@ -42,7 +41,7 @@ internal static class Retyper
 
     /// <summary>Požádá okno, ať dál píše v jiném rozložení (stejně jako Win+mezerník).</summary>
     public static void SwitchLayout(nint window, WindowsLayout layout) =>
-        Native.PostMessage(window, Native.WM_INPUTLANGCHANGEREQUEST, 0, layout.Handle);
+        Native.PostMessageW(window, Native.WM_INPUTLANGCHANGEREQUEST, 0, layout.Handle);
 
     // Znaky Unicode se napíšou stejně v jakémkoli rozložení, nemusíme čekat na jeho přepnutí.
     private static void AddText(List<Native.INPUT> inputs, string text)
@@ -66,8 +65,12 @@ internal static class Retyper
         inputs.Add(Key(virtualKey, 0, Native.KEYEVENTF_KEYUP));
     }
 
-    private static void Send(List<Native.INPUT> inputs) =>
-        Native.SendInput((uint)inputs.Count, [.. inputs], Marshal.SizeOf<Native.INPUT>());
+    private static void Send(List<Native.INPUT> inputs)
+    {
+        var array = inputs.ToArray();
+        fixed (Native.INPUT* pointer = array)
+            Native.SendInput((uint)array.Length, pointer, sizeof(Native.INPUT));
+    }
 
     private static Native.INPUT Key(ushort virtualKey, ushort scan, uint flags) => new()
     {

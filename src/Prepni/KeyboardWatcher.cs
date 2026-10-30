@@ -8,14 +8,15 @@ namespace Prepni;
 /// v paměti) a pozná dvojí klepnutí na Shift. Háček běží ve vlákně s frontou zpráv, které ho nainstalovalo,
 /// a musí se vrátit rychle; vlastní přepis proto dělá volající až po návratu.
 /// </summary>
-internal sealed class KeyboardWatcher : IDisposable
+internal sealed unsafe class KeyboardWatcher : IDisposable
 {
     private const uint TapMilliseconds = 300;
     private const uint DoubleTapMilliseconds = 450;
 
+    // Windows volají háček jako obyčejnou funkci bez objektu; instance je v procesu jen jedna.
+    private static KeyboardWatcher? _instance;
+
     private readonly Layouts _layouts;
-    private readonly Native.HookProc _keyboardProc;
-    private readonly Native.HookProc _mouseProc;
     private readonly nint _keyboardHook;
     private readonly nint _mouseHook;
 
@@ -30,15 +31,13 @@ internal sealed class KeyboardWatcher : IDisposable
     public KeyboardWatcher(Layouts layouts)
     {
         _layouts = layouts;
+        _instance = this;
 
-        // Delegáty držíme v polích, jinak by je uklidil garbage collector a Windows by volaly do prázdna.
-        _keyboardProc = OnKeyboard;
-        _mouseProc = OnMouse;
-        var module = Native.GetModuleHandle(null);
-        _keyboardHook = Native.SetWindowsHookEx(Native.WH_KEYBOARD_LL, _keyboardProc, module, 0);
-        _mouseHook = Native.SetWindowsHookEx(Native.WH_MOUSE_LL, _mouseProc, module, 0);
+        var module = Native.GetModuleHandleW(null);
+        _keyboardHook = Native.SetWindowsHookExW(Native.WH_KEYBOARD_LL, &OnKeyboard, module, 0);
+        _mouseHook = Native.SetWindowsHookExW(Native.WH_MOUSE_LL, &OnMouse, module, 0);
         if (_keyboardHook == 0 || _mouseHook == 0)
-            throw new InvalidOperationException($"Háček klávesnice se nepodařilo nainstalovat (chyba {Marshal.GetLastWin32Error()}).");
+            throw new InvalidOperationException($"Háček klávesnice se nepodařilo nainstalovat (chyba {Marshal.GetLastPInvokeError()}).");
     }
 
     public TypedText Text { get; } = new();
@@ -51,27 +50,40 @@ internal sealed class KeyboardWatcher : IDisposable
     /// <summary>Uživatel něco napsal nebo kliknul: případný probíhající převod končí.</summary>
     public event Action? Interrupted;
 
-    private nint OnKeyboard(int code, nint wParam, nint lParam)
+    [UnmanagedCallersOnly]
+    private static nint OnKeyboard(int code, nint wParam, nint lParam)
     {
-        if (code >= 0 && !Paused)
+        var watcher = _instance;
+        try
         {
-            var info = Marshal.PtrToStructure<Native.KBDLLHOOKSTRUCT>(lParam);
+            if (code >= 0 && watcher is { Paused: false })
+            {
+                var info = *(Native.KBDLLHOOKSTRUCT*)lParam;
 
-            // Vlastní přepis (a jiné programy, které píšou za uživatele) nesledujeme.
-            if ((info.flags & Native.LLKHF_INJECTED) == 0)
-                OnKey(info, down: wParam is Native.WM_KEYDOWN or Native.WM_SYSKEYDOWN);
+                // Vlastní přepis (a jiné programy, které píšou za uživatele) nesledujeme.
+                if ((info.flags & Native.LLKHF_INJECTED) == 0)
+                    watcher.OnKey(info, down: wParam is Native.WM_KEYDOWN or Native.WM_SYSKEYDOWN);
+            }
+        }
+        catch
+        {
+            // Výjimka z háčku by shodila celý proces; jeden ztracený stisk nevadí.
+            watcher?.Text.Clear();
         }
 
-        return Native.CallNextHookEx(_keyboardHook, code, wParam, lParam);
+        return Native.CallNextHookEx(watcher?._keyboardHook ?? 0, code, wParam, lParam);
     }
 
-    private nint OnMouse(int code, nint wParam, nint lParam)
+    [UnmanagedCallersOnly]
+    private static nint OnMouse(int code, nint wParam, nint lParam)
     {
+        var watcher = _instance;
+
         // Kliknutí přesune kurzor jinam; co jsme si pamatovali, už nemusí být před ním.
         if (code >= 0 && wParam is Native.WM_LBUTTONDOWN or Native.WM_RBUTTONDOWN or Native.WM_MBUTTONDOWN)
-            Interrupt();
+            watcher?.Interrupt();
 
-        return Native.CallNextHookEx(_mouseHook, code, wParam, lParam);
+        return Native.CallNextHookEx(watcher?._mouseHook ?? 0, code, wParam, lParam);
     }
 
     private void OnKey(Native.KBDLLHOOKSTRUCT info, bool down)
@@ -184,5 +196,6 @@ internal sealed class KeyboardWatcher : IDisposable
         Native.UnhookWindowsHookEx(_keyboardHook);
         Native.UnhookWindowsHookEx(_mouseHook);
         Text.Clear();
+        _instance = null;
     }
 }
