@@ -20,6 +20,8 @@ internal static unsafe partial class Native
     public const int WM_MBUTTONDOWN = 0x0207;
     public const int WM_INPUTLANGCHANGEREQUEST = 0x0050;
     public const uint WM_NULL = 0x0000;
+    public const uint WM_QUIT = 0x0012;
+    public const uint WM_TIMER = 0x0113;
     public const uint WM_APP = 0x8000;
 
     public const uint LLKHF_EXTENDED = 0x01;
@@ -139,6 +141,13 @@ internal static unsafe partial class Native
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct POINT
     {
         public int x;
@@ -205,6 +214,20 @@ internal static unsafe partial class Native
 
     [LibraryImport("user32.dll")]
     public static partial nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+
+    [LibraryImport("kernel32.dll")]
+    public static partial uint GetCurrentThreadId();
+
+    [LibraryImport("user32.dll")]
+    public static partial nuint SetTimer(nint hWnd, nuint nIDEvent, uint uElapse, nint lpTimerFunc);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PostThreadMessageW(uint idThread, uint msg, nint wParam, nint lParam);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetLastInputInfo(LASTINPUTINFO* plii);
 
     // Klávesnice a rozložení
 

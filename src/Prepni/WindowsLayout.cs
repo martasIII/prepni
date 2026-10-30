@@ -69,7 +69,7 @@ internal sealed unsafe class WindowsLayout(nint handle) : IKeyboardLayout
     }
 }
 
-/// <summary>Nainstalovaná rozložení; pro stejné HKL vrací vždy stejný objekt.</summary>
+/// <summary>Nainstalovaná rozložení; pro stejné HKL vrací vždy stejný objekt. Volá se z vlákna háčků i z okna.</summary>
 internal sealed unsafe class Layouts
 {
     private readonly Dictionary<nint, WindowsLayout> _cache = [];
@@ -95,8 +95,11 @@ internal sealed unsafe class Layouts
 
     private WindowsLayout Get(nint handle)
     {
-        if (!_cache.TryGetValue(handle, out var layout))
-            _cache[handle] = layout = new WindowsLayout(handle);
-        return layout;
+        lock (_cache)
+        {
+            if (!_cache.TryGetValue(handle, out var layout))
+                _cache[handle] = layout = new WindowsLayout(handle);
+            return layout;
+        }
     }
 }

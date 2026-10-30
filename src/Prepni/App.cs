@@ -32,8 +32,9 @@ internal sealed class App : IDisposable
         _watcher = new KeyboardWatcher(_layouts);
 
         // Přepis se nesmí dělat uvnitř háčku klávesnice; odložíme ho až za něj.
+        // Obojí přichází z vlákna háčků: přepis se dělá ve vlákně okna, počítadlo slov stačí vynulovat.
         _watcher.DoubleShift += () => _tray.Post(Retype);
-        _watcher.Interrupted += () => _words = 0;
+        _watcher.Interrupted += () => Volatile.Write(ref _words, 0);
     }
 
     public void Run() => TrayWindow.Run();
@@ -52,7 +53,6 @@ internal sealed class App : IDisposable
         {
             case PauseItem:
                 _watcher.Paused = !_watcher.Paused;
-                _watcher.Text.Clear();
                 _tray.SetTip(_watcher.Paused ? "Přepni: pozastaveno" : Hint);
                 break;
 
@@ -89,18 +89,19 @@ internal sealed class App : IDisposable
                 }
 
                 // Nic nenapsáno od kliknutí nebo šipek: možná je označený text.
-                if (_watcher.Text.IsEmpty)
+                if (_watcher.Read(text => text.IsEmpty))
                 {
                     await RetypeSelectionAsync(window, current, _target);
                     return;
                 }
             }
 
-            var retyping = _watcher.Text.Retype(_words + 1, _target!);
+            var words = _words + 1;
+            var target = _target!;
+            var (retyping, keys) = _watcher.Read(text => (text.Retype(words, target), text.KeysOfLastWords(words)));
             if (retyping is null)
                 return;
 
-            var keys = _watcher.Text.KeysOfLastWords(_words + 1);
             _words++;
             await Retyper.ReplaceAsync(window, _target!, retyping.DeleteCount, keys, retyping.Text, _tray.Handle);
 
