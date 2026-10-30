@@ -1,6 +1,6 @@
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { ShiftKey } from "./Icon";
-import { colors, font } from "./theme";
+import { colors, font, sounds } from "./theme";
 
 /** Titulek k záznamu: „shift“ ukáže dvě klávesy Shift, jinak text na štítku. */
 export type CaptionSpec = { from: number; to: number; text: string };
@@ -12,6 +12,16 @@ export const Caption: React.FC<{ text: string; frames: number }> = ({ text, fram
 
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", paddingTop: 140, opacity }}>
+      {text === "shift" && (
+        <>
+          <Sequence from={6} durationInFrames={10}>
+            <Audio src={staticFile(sounds.tap)} />
+          </Sequence>
+          <Sequence from={14} durationInFrames={10}>
+            <Audio src={staticFile(sounds.tap)} />
+          </Sequence>
+        </>
+      )}
       {text === "shift" ? (
         <div style={{ display: "flex", alignItems: "center", gap: 28, fontFamily: font, fontSize: 64, color: colors.frame, fontWeight: 600 }}>
           <ShiftKey pressed={tap(6)} />

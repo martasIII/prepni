@@ -1,6 +1,6 @@
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Icon, ShiftKey } from "./Icon";
-import { colors, font, mono } from "./theme";
+import { colors, font, mono, sounds } from "./theme";
 
 const appear = (frame: number, from: number) =>
   interpolate(frame, [from, from + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -15,6 +15,16 @@ export const Outro: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ background: colors.background, fontFamily: font, alignItems: "center", justifyContent: "center", gap: 64 }}>
+      <Sequence from={20} durationInFrames={10}>
+        <Audio src={staticFile(sounds.tap)} />
+      </Sequence>
+      <Sequence from={30} durationInFrames={10}>
+        <Audio src={staticFile(sounds.tap)} />
+      </Sequence>
+      <Sequence from={46} durationInFrames={20}>
+        <Audio src={staticFile(sounds.success)} />
+      </Sequence>
+
       <div style={{ fontSize: 110, fontWeight: 600, color: colors.text, opacity: heading, transform: `translateY(${(1 - heading) * 20}px)` }}>
         Dvakrát Shift a je to.
       </div>

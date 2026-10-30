@@ -19,5 +19,13 @@ export const height = 1080;
 export const introFrames = 105;
 export const outroFrames = 120;
 
+/** Zvuky z tools/jingle.py (vlastní 8bitová znělka a efekty). */
+export const sounds = {
+  music: "audio/music.wav",
+  tap: "audio/tap.wav",
+  flip: "audio/flip.wav",
+  success: "audio/success.wav",
+};
+
 /** Prolnutí mezi úvodem, záznamem a závěrem. */
 export const fadeFrames = 8;

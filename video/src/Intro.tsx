@@ -1,6 +1,6 @@
-import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Icon, ShiftKey } from "./Icon";
-import { colors, font } from "./theme";
+import { colors, font, sounds } from "./theme";
 
 // Název napsaný na anglické klávesnici: „P5epni“. Dvakrát Shift a z pětky je „ř“.
 const flipAt = 42;
@@ -23,6 +23,16 @@ export const Intro: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ background: colors.background, fontFamily: font, alignItems: "center", justifyContent: "center" }}>
+      <Sequence from={28} durationInFrames={10}>
+        <Audio src={staticFile(sounds.tap)} />
+      </Sequence>
+      <Sequence from={36} durationInFrames={10}>
+        <Audio src={staticFile(sounds.tap)} />
+      </Sequence>
+      <Sequence from={flipAt - 4} durationInFrames={15}>
+        <Audio src={staticFile(sounds.flip)} />
+      </Sequence>
+
       <div style={{ display: "flex", alignItems: "center", gap: 56 }}>
         <div style={{ transform: `scale(${0.6 + 0.4 * iconIn})`, opacity: iconIn }}>
           <Icon size={200} />

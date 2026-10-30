@@ -4,6 +4,7 @@
 ikonka; uprostřed je skutečný záznam obrazovky.
 
 ```bash
+python tools/jingle.py   # vlastní 8bitová znělka a efekty do public/audio (numpy)
 npm install
 npm run studio   # náhled v prohlížeči, ladění časování
 npm run video    # out/prepni.mp4: úvod + záznam + závěr
