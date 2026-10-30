@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Prepni.Core/Prepni.Core.csproj" />
+    <Project Path="src/Prepni/Prepni.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Prepni.Core.Tests/Prepni.Core.Tests.csproj" />
+  </Folder>
+</Solution>
