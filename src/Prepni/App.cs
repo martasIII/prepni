@@ -122,11 +122,14 @@ internal sealed class App : IDisposable
         if (selected is null)
             return;
 
-        var retyped = Typist.Retype(selected, source, target);
+        // Směr podle textu, ne podle klávesnice: ta už může být přepnutá opravou slova před chvílí.
+        var (from, to) = Typist.Direction(selected, source, target);
+        var retyped = Typist.Retype(selected, from, to);
 
-        // Klávesy přepíšou označený text. Víc řádků nemačkat (Enter by v chatu odeslal zprávu): bez kláves přes schránku.
-        var keys = Typist.KeysFor(selected, source);
-        await Retyper.ReplaceAsync(window, target, 0, keys, retyped, _tray.Handle);
+        // Klávesy přepíšou označený text. Víc řádků nemačkat (Enter by v chatu odeslal zprávu) a znaky, které
+        // ve výchozím rozložení nejsou (napůl opravená věta): bez kláves přes schránku.
+        var keys = Typist.KeysFor(selected, from);
+        await Retyper.ReplaceAsync(window, (WindowsLayout)to, 0, keys, retyped, _tray.Handle);
 
         ShowChange(selected, retyped);
     }

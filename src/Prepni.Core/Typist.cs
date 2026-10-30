@@ -55,6 +55,37 @@ public static class Typist
     }
 
     /// <summary>
+    /// Kterým směrem převést hotový text (označenou větu). Rozložení klávesnice může být už přepnuté, takže
+    /// rozhoduje text: kde jsou mezi písmeny číslice a znaky („poz9t59“), psalo se ve špatném rozložení. Vyhraje
+    /// směr s čistším výsledkem; nerozhodně (třeba „+ěšč“ → „1234“) z aktuálního do druhého.
+    /// </summary>
+    public static (IKeyboardLayout From, IKeyboardLayout To) Direction(string text, IKeyboardLayout current, IKeyboardLayout other)
+    {
+        var forward = Suspicion(Retype(text, current, other));
+        var backward = Suspicion(Retype(text, other, current));
+        return backward < forward ? (other, current) : (current, other);
+    }
+
+    /// <summary>Kolik znaků vypadá jako napsaných ve špatném rozložení: číslice u písmene, znak uprostřed slova.</summary>
+    private static int Suspicion(string text)
+    {
+        var score = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (char.IsLetter(c) || char.IsWhiteSpace(c))
+                continue;
+
+            var letterBefore = i > 0 && char.IsLetter(text[i - 1]);
+            var letterAfter = i + 1 < text.Length && char.IsLetter(text[i + 1]);
+            if ((letterBefore && letterAfter) || (char.IsDigit(c) && (letterBefore || letterAfter)))
+                score++;
+        }
+
+        return score;
+    }
+
+    /// <summary>
     /// Klávesy, kterými se text v daném rozložení napíše; <c>null</c>, když některý znak napsat nejde (konec řádku,
     /// emoji). Stejné klávesy v jiném rozložení pak napíšou převedený text.
     /// </summary>

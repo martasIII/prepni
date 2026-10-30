@@ -104,4 +104,31 @@ public class TypistTests
     {
         Assert.Null(Typist.KeysFor("a" + (char)10 + "b", Us));
     }
+
+    [Fact]
+    public void Half_fixed_selection_is_converted_from_US_even_when_the_keyboard_is_already_Czech()
+    {
+        // Z Martinova záznamu: po opravě slov byla klávesnice česká a označená věta se převedla obráceně.
+        var (from, to) = Typist.Direction("poz9t59 bude p5ev86n2 obla4no, m9sty p8l", Cs, Us);
+
+        Assert.Same(Us, from);
+        Assert.Same(Cs, to);
+    }
+
+    [Fact]
+    public void Czech_number_row_selection_is_converted_to_digits()
+    {
+        var (from, to) = Typist.Direction("+ěšč", Cs, Us);
+
+        Assert.Equal("1234", Typist.Retype("+ěšč", from, to));
+    }
+
+    [Fact]
+    public void Plain_words_follow_the_current_layout()
+    {
+        var (from, to) = Typist.Direction("hello world", Us, Cs);
+
+        Assert.Same(Us, from);
+        Assert.Same(Cs, to);
+    }
 }
