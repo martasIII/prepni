@@ -65,13 +65,37 @@ public sealed class TypedText
             return null;
 
         var region = _units.Skip(from).ToList();
-        var shown = string.Concat(region.Select(u => Typist.Type(u.Keys, u.Shown)));
-        var retyped = string.Concat(region.Select(u => Typist.Type(u.Keys, target)));
+        var shown = TypeShown(region);
+
+        // Celý úsek jako jeden sled kláves: „+“ v US je v češtině mrtvá klávesa a složí se s dalším písmenem („+n“ = „ň“).
+        var retyped = Typist.Type(region.SelectMany(u => u.Keys), target);
 
         foreach (var unit in region)
             unit.Shown = target;
 
         return new Retyping(new StringInfo(shown).LengthInTextElements, retyped, shown);
+    }
+
+    /// <summary>Klávesy posledních <paramref name="words"/> slov (stejný úsek jako <see cref="Retype"/>), i s mezerami na konci.</summary>
+    public IReadOnlyList<Keystroke> KeysOfLastWords(int words) =>
+        StartOfLastWords(words) is { } from ? _units.Skip(from).SelectMany(u => u.Keys).ToList() : [];
+
+    /// <summary>Co je z úseku vidět: souvislé kusy v jednom rozložení se píšou vcelku, aby seděly mrtvé klávesy.</summary>
+    private static string TypeShown(List<TypedUnit> units)
+    {
+        var text = new System.Text.StringBuilder();
+        for (var start = 0; start < units.Count;)
+        {
+            var layout = units[start].Shown;
+            var end = start;
+            while (end < units.Count && units[end].Shown == layout)
+                end++;
+
+            text.Append(Typist.Type(units.Skip(start).Take(end - start).SelectMany(u => u.Keys), layout));
+            start = end;
+        }
+
+        return text.ToString();
     }
 
     private int? StartOfLastWords(int words)

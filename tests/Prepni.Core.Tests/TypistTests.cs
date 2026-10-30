@@ -89,4 +89,19 @@ public class TypistTests
     {
         Assert.Equal("ž\r\ná 😀", Typist.Retype("6\r\n8 😀", Us, Cs));
     }
+
+    [Fact]
+    public void Keys_for_selected_text_type_it_converted_in_the_other_layout()
+    {
+        var keys = Typist.KeysFor("k=od a [pln8", Us);
+
+        Assert.NotNull(keys);
+        Assert.Equal("kód a úplná", Typist.Type(keys, Cs));
+    }
+
+    [Fact]
+    public void Text_with_a_line_break_has_no_keys()
+    {
+        Assert.Null(Typist.KeysFor("a" + (char)10 + "b", Us));
+    }
 }

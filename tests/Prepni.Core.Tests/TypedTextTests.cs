@@ -105,4 +105,29 @@ public class TypedTextTests
         Assert.Equal("a složitá", typed.Retype(2, Cs)?.Text[^9..]);
         Assert.Equal(TypedText.MaxKeys, typed.Retype(2, Cs)!.DeleteCount);
     }
+
+    [Fact]
+    public void Dead_key_from_the_other_layout_composes_with_the_next_letter()
+    {
+        // Z Martinova testu („p5eh8+nky“): „+“ na US je v češtině háček, „+n“ má být „ň“, ne „ˇn“.
+        var typed = TypedOnUs("m9sto pl8+n");
+
+        Assert.Equal(new Retyping(5, "pláň", "pl8+n"), typed.Retype(1, Cs));
+
+        // Na obrazovce je teď „m9sto pláň“ (10 znaků): háček s „n“ je jeden znak.
+        Assert.Equal(new Retyping(10, "místo pláň", "m9sto pláň"), typed.Retype(2, Cs));
+    }
+
+    [Fact]
+    public void Keys_of_the_last_words_type_the_retyped_text_in_the_target_layout()
+    {
+        // Aplikace přepne okno do cílového rozložení a zmáčkne stejné klávesy; vyjít musí totéž co Retype.
+        var typed = TypedOnUs("m9sto pl8+n ");
+
+        var retyping = typed.Retype(2, Cs);
+        var keys = typed.KeysOfLastWords(2);
+
+        Assert.Equal(retyping!.Text, Typist.Type(keys, Cs));
+        Assert.Equal("místo pláň ", Typist.Type(keys, Cs));
+    }
 }

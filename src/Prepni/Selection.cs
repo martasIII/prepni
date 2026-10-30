@@ -12,7 +12,7 @@ internal static class Selection
         var saved = ClipboardSnapshot.Take(owner);
         var before = Native.GetClipboardSequenceNumber();
 
-        Retyper.Shortcut(Native.VK_C);
+        await Retyper.ShortcutAsync(Native.VK_C);
         if (!await ChangedSinceAsync(before))
             return null;
 
@@ -39,7 +39,7 @@ internal static class Selection
     {
         var saved = ClipboardSnapshot.Take(owner);
         Clipboard.WriteText(owner, text);
-        Retyper.Shortcut(Native.VK_V);
+        await Retyper.ShortcutAsync(Native.VK_V);
 
         // Aplikace si text ze schránky vezme až za chvíli; vrátit ji hned by vložilo původní obsah.
         await Task.Delay(400);

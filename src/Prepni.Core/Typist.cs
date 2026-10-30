@@ -54,6 +54,25 @@ public static class Typist
         return result.Append(Type(keys, to)).ToString();
     }
 
+    /// <summary>
+    /// Klávesy, kterými se text v daném rozložení napíše; <c>null</c>, když některý znak napsat nejde (konec řádku,
+    /// emoji). Stejné klávesy v jiném rozložení pak napíšou převedený text.
+    /// </summary>
+    public static IReadOnlyList<Keystroke>? KeysFor(string text, IKeyboardLayout layout)
+    {
+        var keys = new List<Keystroke>();
+        var elements = System.Globalization.StringInfo.GetTextElementEnumerator(text.Normalize(NormalizationForm.FormC));
+        while (elements.MoveNext())
+        {
+            var element = (string)elements.Current;
+            if (element.Length != 1 || char.IsControl(element[0]) || KeysFor(element[0], layout) is not { } found)
+                return null;
+            keys.AddRange(found);
+        }
+
+        return keys;
+    }
+
     /// <summary>Klávesy pro znak: přímo, nebo mrtvá klávesa a písmeno („ó“ = „´“ + „o“).</summary>
     private static Keystroke[]? KeysFor(char c, IKeyboardLayout layout)
     {

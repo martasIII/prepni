@@ -49,7 +49,9 @@ internal static unsafe partial class Native
     public const uint ToUnicodeDontChangeState = 0x4;
 
     public const uint INPUT_KEYBOARD = 1;
+    public const uint KEYEVENTF_EXTENDEDKEY = 0x1;
     public const uint KEYEVENTF_KEYUP = 0x2;
+    public const uint KEYEVENTF_SCANCODE = 0x8;
     public const uint KEYEVENTF_UNICODE = 0x4;
 
     public const uint SPI_GETSTICKYKEYS = 0x003A;

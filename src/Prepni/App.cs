@@ -100,10 +100,9 @@ internal sealed class App : IDisposable
             if (retyping is null)
                 return;
 
+            var keys = _watcher.Text.KeysOfLastWords(_words + 1);
             _words++;
-            Retyper.Apply(retyping);
-            if (_words == 1)
-                Retyper.SwitchLayout(window, _target!);
+            await Retyper.ReplaceAsync(window, _target!, retyping.DeleteCount, keys, retyping.Text, _tray.Handle);
 
             ShowChange(retyping.Original, retyping.Text);
         }
@@ -124,12 +123,11 @@ internal sealed class App : IDisposable
             return;
 
         var retyped = Typist.Retype(selected, source, target);
-        if (retyped.Contains('\n') || retyped.Contains('\r'))
-            await Selection.PasteAsync(_tray.Handle, retyped);
-        else
-            Retyper.Type(retyped);
 
-        Retyper.SwitchLayout(window, target);
+        // Klávesy přepíšou označený text. Víc řádků nemačkat (Enter by v chatu odeslal zprávu): bez kláves přes schránku.
+        var keys = Typist.KeysFor(selected, source);
+        await Retyper.ReplaceAsync(window, target, 0, keys, retyped, _tray.Handle);
+
         ShowChange(selected, retyped);
     }
 
