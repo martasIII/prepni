@@ -20,6 +20,13 @@ internal sealed unsafe class KeyboardWatcher : IDisposable
     private const uint CheckMilliseconds = 5000;
     private const int SilentHookMilliseconds = 2000;
 
+    /// <summary>
+    /// Testovací režim (proměnná prostředí PREPNI_TEST_INPUT=1): sleduje i klávesy, které posílá jiný program,
+    /// aby šlo vyzkoušet celou cestu psaní → dvojí Shift → oprava bez člověka u klávesnice. Vlastní stisky
+    /// aplikace se nesledují nikdy.
+    /// </summary>
+    private static readonly bool AcceptInjected = Environment.GetEnvironmentVariable("PREPNI_TEST_INPUT") == "1";
+
     // Windows volají háček jako obyčejnou funkci bez objektu; instance je v procesu jen jedna.
     private static KeyboardWatcher? _instance;
 
@@ -157,7 +164,8 @@ internal sealed unsafe class KeyboardWatcher : IDisposable
                     var info = *(Native.KBDLLHOOKSTRUCT*)lParam;
 
                     // Vlastní přepis (a jiné programy, které píšou za uživatele) nesledujeme.
-                    if ((info.flags & Native.LLKHF_INJECTED) == 0)
+                    var injected = (info.flags & Native.LLKHF_INJECTED) != 0;
+                    if (!injected || (AcceptInjected && info.dwExtraInfo != Retyper.Signature))
                         watcher.OnKey(info, down: wParam is Native.WM_KEYDOWN or Native.WM_SYSKEYDOWN);
                 }
             }

@@ -118,9 +118,12 @@ internal static class Retyper
             Native.SendInput((uint)array.Length, pointer, sizeof(Native.INPUT));
     }
 
+    /// <summary>Podpis vlastních stisků, aby je háček poznal a nesledoval (ani v testovacím režimu).</summary>
+    public const nint Signature = 0x50524550;
+
     private static Native.INPUT Key(ushort virtualKey, ushort scan, uint flags) => new()
     {
         type = Native.INPUT_KEYBOARD,
-        u = new Native.InputUnion { ki = new Native.KEYBDINPUT { wVk = virtualKey, wScan = scan, dwFlags = flags } },
+        u = new Native.InputUnion { ki = new Native.KEYBDINPUT { wVk = virtualKey, wScan = scan, dwFlags = flags, dwExtraInfo = Signature } },
     };
 }
