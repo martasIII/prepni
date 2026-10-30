@@ -3,9 +3,17 @@ import { Intro } from "./Intro";
 import { Outro } from "./Outro";
 import { colors, fadeFrames, font, introFrames, outroFrames } from "./theme";
 
+/** Výřez záznamu v jeho pixelech; zvětší se na celé video a okraje se zakryjí pozadím. */
+export type Crop = { x: number; y: number; width: number; height: number };
+
 export type FullProps = {
   /** Záznam obrazovky v public/, třeba „recording.mp4“. */
   recording: string;
+  /** Výřez záznamu, třeba malý Notepad nad hlavním panelem s přepínačem klávesnice; bez něj celá obrazovka. */
+  crop?: Crop;
+  /** Rozměry záznamu; doplní calculateMetadata. */
+  recordingWidth?: number;
+  recordingHeight?: number;
   /** Doplní calculateMetadata podle skutečné délky záznamu. */
   recordingFrames?: number;
   hasRecording?: boolean;
@@ -21,13 +29,34 @@ const Fade: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames,
   return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
 
+/** Záznam zvětšený tak, aby výřez vyplnil video, a vycentrovaný. */
+const Recording: React.FC<{ src: string; crop?: Crop; width: number; height: number }> = ({ src, crop, width, height }) => {
+  const area = crop ?? { x: 0, y: 0, width, height };
+  const scale = Math.min(1920 / area.width, 1080 / area.height);
+  const left = (1920 - area.width * scale) / 2 - area.x * scale;
+  const top = (1080 - area.height * scale) / 2 - area.y * scale;
+
+  return (
+    <AbsoluteFill style={{ background: colors.background, overflow: "hidden" }}>
+      <OffthreadVideo src={src} muted style={{ position: "absolute", left, top, width: width * scale, height: height * scale }} />
+    </AbsoluteFill>
+  );
+};
+
 const Placeholder: React.FC = () => (
   <AbsoluteFill style={{ background: colors.face, fontFamily: font, alignItems: "center", justifyContent: "center", color: colors.muted, fontSize: 56 }}>
     Sem přijde záznam obrazovky: public/recording.mp4
   </AbsoluteFill>
 );
 
-export const Full: React.FC<FullProps> = ({ recording, recordingFrames = 450, hasRecording = false }) => (
+export const Full: React.FC<FullProps> = ({
+  recording,
+  crop,
+  recordingWidth = 1920,
+  recordingHeight = 1080,
+  recordingFrames = 450,
+  hasRecording = false,
+}) => (
   <AbsoluteFill style={{ background: colors.background }}>
     <Sequence durationInFrames={introFrames}>
       <Fade frames={introFrames}>
@@ -38,7 +67,7 @@ export const Full: React.FC<FullProps> = ({ recording, recordingFrames = 450, ha
     <Sequence from={introFrames} durationInFrames={recordingFrames}>
       <Fade frames={recordingFrames}>
         {hasRecording ? (
-          <OffthreadVideo src={staticFile(recording)} muted style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          <Recording src={staticFile(recording)} crop={crop} width={recordingWidth} height={recordingHeight} />
         ) : (
           <Placeholder />
         )}
