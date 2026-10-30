@@ -59,27 +59,53 @@ public static class Typist
     /// rozhoduje text: kde jsou mezi písmeny číslice a znaky („poz9t59“), psalo se ve špatném rozložení. Vyhraje
     /// směr s čistším výsledkem; nerozhodně (třeba „+ěšč“ → „1234“) z aktuálního do druhého.
     /// </summary>
-    public static (IKeyboardLayout From, IKeyboardLayout To) Direction(string text, IKeyboardLayout current, IKeyboardLayout other)
+    /// <returns><c>null</c>, když text už vypadá správně líp než oba převody („Ahoj, jak se máš? (dobře)“).</returns>
+    public static (IKeyboardLayout From, IKeyboardLayout To)? Direction(string text, IKeyboardLayout current, IKeyboardLayout other)
     {
         var forward = Suspicion(Retype(text, current, other));
         var backward = Suspicion(Retype(text, other, current));
+        if (Suspicion(text) < Math.Min(forward, backward))
+            return null;
+
         return backward < forward ? (other, current) : (current, other);
     }
 
-    /// <summary>Kolik znaků vypadá jako napsaných ve špatném rozložení: číslice u písmene, znak uprostřed slova.</summary>
+    // Běžná interpunkce na kraji slova není podezřelá: „(ahoj“, „oblačno,“, „konec.“, „»tak«“.
+    private const string LeadingMarks = "([{\"'«„“‚‘¿¡";
+    private const string TrailingMarks = ".,;:!?…)]}\"'»“”’";
+
+    /// <summary>
+    /// Kolik znaků vypadá jako napsaných ve špatném rozložení: cokoli jiného než písmeno uvnitř slova („poz9t59“,
+    /// „m;7re“), kromě interpunkce na kraji a spojovníku nebo apostrofu mezi písmeny („don't“, „aujourd'hui“).
+    /// Počítá se i u rozložení, kde se prohazují písmena (AZERTY): tam se správná část věty pokazí oběma směry
+    /// a rozhodnout musí jen ty znaky.
+    /// </summary>
     private static int Suspicion(string text)
     {
         var score = 0;
-        for (var i = 0; i < text.Length; i++)
+        foreach (var word in text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
         {
-            var c = text[i];
-            if (char.IsLetter(c) || char.IsWhiteSpace(c))
+            if (!word.Any(char.IsLetter))
                 continue;
 
-            var letterBefore = i > 0 && char.IsLetter(text[i - 1]);
-            var letterAfter = i + 1 < text.Length && char.IsLetter(text[i + 1]);
-            if ((letterBefore && letterAfter) || (char.IsDigit(c) && (letterBefore || letterAfter)))
-                score++;
+            var start = 0;
+            var end = word.Length;
+            while (start < end && LeadingMarks.Contains(word[start]))
+                start++;
+            while (end > start && TrailingMarks.Contains(word[end - 1]))
+                end--;
+
+            for (var i = start; i < end; i++)
+            {
+                var c = word[i];
+                if (char.IsLetter(c))
+                    continue;
+
+                var joiner = c is '-' or '\'' or '’' && i > start && i < end - 1
+                    && char.IsLetter(word[i - 1]) && char.IsLetter(word[i + 1]);
+                if (!joiner)
+                    score++;
+            }
         }
 
         return score;

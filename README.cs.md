@@ -63,6 +63,8 @@ u klávesnice: `PREPNI_TEST_INPUT=1`, háček pak přijme i klávesy od jiného 
 - Okna spuštěná jako správce (Windows nedovolí psát do nich z běžné aplikace).
 - Neví, kde je kurzor: když v textu skočíš jinam bez myši a šipek (třeba Ctrl+Z), oprava může zasáhnout špatné místo.
 - Pole pro heslo zatím nepozná.
+- Napůl opravenou označenou větu u rozložení, které prohazuje písmena (francouzské AZERTY prohazuje A/Q, Z/W),
+  bez slovníku nepozná; označ jen špatnou část, nebo opravuj po slovech.
 - Ve Visual Studiu a VS Code kopíruje Ctrl+C bez označení celý řádek; to aplikace pozná a nic nepřepíše.
   Jiné editory s podobným chováním zatím nezná.
 - V IDE od JetBrains otevře dvojí Shift zároveň Search Everywhere.

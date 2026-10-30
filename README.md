@@ -82,6 +82,8 @@ accepts keys injected by another program (its own keystrokes are always ignored)
 - It doesn't know where the caret is: if you move it without the mouse or arrow keys (e.g. Ctrl+Z), a fix can
   land in the wrong place.
 - Password fields aren't detected yet.
+- A half-fixed selection in a layout that swaps letters (French AZERTY swaps A/Q, Z/W) can't be told apart from
+  a typo without a dictionary; select only the wrong part, or fix word by word.
 - Visual Studio and VS Code copy the whole line on Ctrl+C without a selection; Přepni detects that and does
   nothing. Other editors with the same behaviour aren't known yet.
 - In JetBrains IDEs, double Shift also opens Search Everywhere.

@@ -59,6 +59,15 @@ internal sealed class TableLayout : IKeyboardLayout
         "1234567890%ˇ" + "QWERTZUIOP/(" + "ASDFGHJKL\"!°" + "'YXCVBNM?:_",
         deadKeys: "´ˇ¨");
 
+    /// <summary>
+    /// Francouzské AZERTY: prohozené A/Q a Z/W, M na místě US středníku, na číselné řadě písmena s diakritikou
+    /// (číslice až se Shiftem), „^“ a „¨“ jako mrtvé klávesy.
+    /// </summary>
+    public static TableLayout Fr { get; } = Create("FR",
+        "&é\"'(-è_çà)=" + "azertyuiop^$" + "qsdfghjklmù²" + "*wxcvbn,;:!",
+        "1234567890°+" + "AZERTYUIOP¨£" + "QSDFGHJKLM%²" + "µWXCVBN?./§",
+        deadKeys: "^¨");
+
     private static TableLayout Create(string name, string plain, string shifted, string deadKeys = "")
     {
         var layout = new TableLayout(name);

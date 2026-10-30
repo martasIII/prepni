@@ -109,7 +109,7 @@ public class TypistTests
     public void Half_fixed_selection_is_converted_from_US_even_when_the_keyboard_is_already_Czech()
     {
         // Z Martinova záznamu: po opravě slov byla klávesnice česká a označená věta se převedla obráceně.
-        var (from, to) = Typist.Direction("poz9t59 bude p5ev86n2 obla4no, m9sty p8l", Cs, Us);
+        var (from, to) = Typist.Direction("poz9t59 bude p5ev86n2 obla4no, m9sty p8l", Cs, Us)!.Value;
 
         Assert.Same(Us, from);
         Assert.Same(Cs, to);
@@ -118,7 +118,7 @@ public class TypistTests
     [Fact]
     public void Czech_number_row_selection_is_converted_to_digits()
     {
-        var (from, to) = Typist.Direction("+ěšč", Cs, Us);
+        var (from, to) = Typist.Direction("+ěšč", Cs, Us)!.Value;
 
         Assert.Equal("1234", Typist.Retype("+ěšč", from, to));
     }
@@ -126,9 +126,46 @@ public class TypistTests
     [Fact]
     public void Plain_words_follow_the_current_layout()
     {
-        var (from, to) = Typist.Direction("hello world", Us, Cs);
+        var (from, to) = Typist.Direction("hello world", Us, Cs)!.Value;
 
         Assert.Same(Us, from);
         Assert.Same(Cs, to);
+    }
+
+    [Theory]
+    [InlineData("cq vq", "ca va")]   // A a Q prohozené
+    [InlineData(";7re", "mère")]     // M na středníku, „è“ na sedmičce
+    [InlineData("voil0", "voilà")]   // „à“ na nule
+    [InlineData("f[ete", "fête")]    // „^“ jako mrtvá klávesa, s následujícím „e“ dá „ê“
+    public void Text_typed_on_US_keyboard_is_retyped_as_French(string typed, string meant)
+    {
+        Assert.Equal(meant, Typist.Type(TableLayout.Us.KeysFor(typed), TableLayout.Fr));
+    }
+
+    [Fact]
+    public void French_number_row_selection_is_converted_to_digits()
+    {
+        // Na AZERTY jsou číslice až se Shiftem: bez něj vyjde „&é“(“, což mělo být 1234.
+        var (from, to) = Typist.Direction("&é\"'", TableLayout.Fr, TableLayout.Us)!.Value;
+
+        Assert.Equal("1234", Typist.Retype("&é\"'", from, to));
+    }
+
+    [Fact]
+    public void French_sentence_typed_on_US_is_converted_even_when_the_keyboard_is_already_French()
+    {
+        // Celá věta napsaná na US, klávesnice mezitím přepnutá na francouzskou. Napůl opravenou větu u AZERTY
+        // poznat nejde: „ca va“ jsou písmena z obou klávesnic (jen se prohodí a a q), to by chtělo slovník.
+        var (from, to) = Typist.Direction("cq vqm ;7re", TableLayout.Fr, TableLayout.Us)!.Value;
+
+        Assert.Same(TableLayout.Us, from);
+        Assert.Equal("ca va, mère", Typist.Retype("cq vqm ;7re", from, to));
+    }
+
+    [Fact]
+    public void Selection_that_already_looks_right_is_left_alone()
+    {
+        // Označená správná čeština a dvojí Shift omylem: převod by z ní udělal „máš_ 9dobře0“.
+        Assert.Null(Typist.Direction("Ahoj, jak se máš? (dobře)", TableLayout.Cs, TableLayout.Us));
     }
 }

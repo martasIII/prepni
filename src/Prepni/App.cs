@@ -123,8 +123,15 @@ internal sealed class App : IDisposable
         if (selected is null)
             return;
 
-        // Směr podle textu, ne podle klávesnice: ta už může být přepnutá opravou slova před chvílí.
-        var (from, to) = Typist.Direction(selected, source, target);
+        // Směr podle textu, ne podle klávesnice: ta už může být přepnutá opravou slova před chvílí. Text, který
+        // už vypadá správně, nechat být; označení zůstane, nic se nepřepíše.
+        if (Typist.Direction(selected, source, target) is not { } direction)
+        {
+            _tray.SetTip("Přepni: označený text vypadá správně, nechávám ho být");
+            return;
+        }
+
+        var (from, to) = direction;
         var retyped = Typist.Retype(selected, from, to);
 
         // Klávesy přepíšou označený text. Víc řádků nemačkat (Enter by v chatu odeslal zprávu) a znaky, které
