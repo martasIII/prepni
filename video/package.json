@@ -1,0 +1,22 @@
+{
+  "name": "prepni-video",
+  "private": true,
+  "description": "Úvod a závěr videa k Přepni (Remotion); uprostřed skutečný záznam obrazovky.",
+  "scripts": {
+    "studio": "remotion studio",
+    "intro": "remotion render Intro out/intro.mp4",
+    "outro": "remotion render Outro out/outro.mp4",
+    "video": "remotion render Full out/prepni.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.539",
+    "@remotion/media-utils": "4.0.539",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.539"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.12",
+    "typescript": "5.9.2"
+  }
+}
