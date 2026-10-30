@@ -222,7 +222,7 @@ internal sealed unsafe class KeyboardWatcher : IDisposable
 
         Interrupted?.Invoke();
 
-        var window = Native.GetForegroundWindow();
+        var window = Native.FocusedWindow();
         if (window != _window)
         {
             ClearText();

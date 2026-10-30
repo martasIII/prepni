@@ -36,9 +36,12 @@ internal static class Retyper
 
         await Task.Run(() =>
         {
+            // I Backspace po jednom: v Notepadu se jinak jeden ztratil a zůstalo „p“ navíc.
             for (var i = 0; i < deleteCount; i++)
+            {
                 Tap(Native.VK_BACK);
-            Thread.Sleep(KeyGapMilliseconds);
+                Thread.Sleep(KeyGapMilliseconds);
+            }
 
             if (switched && keys is not null)
             {

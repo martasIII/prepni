@@ -141,6 +141,29 @@ internal static unsafe partial class Native
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct RECT
+    {
+        public int left;
+        public int top;
+        public int right;
+        public int bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct GUITHREADINFO
+    {
+        public uint cbSize;
+        public uint flags;
+        public nint hwndActive;
+        public nint hwndFocus;
+        public nint hwndCapture;
+        public nint hwndMenuOwner;
+        public nint hwndMoveSize;
+        public nint hwndCaret;
+        public RECT rcCaret;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct LASTINPUTINFO
     {
         public uint cbSize;
@@ -233,6 +256,21 @@ internal static unsafe partial class Native
 
     [LibraryImport("user32.dll")]
     public static partial nint GetForegroundWindow();
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetGUIThreadInfo(uint idThread, GUITHREADINFO* pgui);
+
+    /// <summary>
+    /// Okno, do kterého jde psaní: to s fokusem, ne hlavní okno aplikace. Notepad ve Windows 11 má textové pole
+    /// v jiném vlákně než hlavní okno a rozložení klávesnice patří vláknu; přepnutí hlavního okna textové pole
+    /// nepřepne („pp5eh8+nky“ místo „přeháňky“).
+    /// </summary>
+    public static nint FocusedWindow()
+    {
+        var info = new GUITHREADINFO { cbSize = (uint)sizeof(GUITHREADINFO) };
+        return GetGUIThreadInfo(0, &info) && info.hwndFocus != 0 ? info.hwndFocus : GetForegroundWindow();
+    }
 
     [LibraryImport("user32.dll")]
     public static partial uint GetWindowThreadProcessId(nint hWnd, out uint processId);

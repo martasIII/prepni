@@ -75,7 +75,7 @@ internal sealed class App : IDisposable
         _busy = true;
         try
         {
-            var window = Native.GetForegroundWindow();
+            var window = Native.FocusedWindow();
             var current = _layouts.Current(window);
 
             // Při prvním klepnutí zvolíme cíl a držíme ho; po přepnutí by „druhé“ rozložení bylo zase to původní.
