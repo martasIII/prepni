@@ -48,10 +48,6 @@ dotnet run --project src/Prepni
 
 Vydání: tag `v*` (třeba `git tag v0.1.0 && git push --tags`) postaví `Prepni.exe` a přiloží ho k vydání.
 
-## Licence
-
-[MIT](LICENSE)
-
 Ikonka ⇄ se objeví v oznamovací oblasti; pravým tlačítkem jde pozastavit nebo ukončit.
 
 ## Co zatím neumí
@@ -62,3 +58,7 @@ Ikonka ⇄ se objeví v oznamovací oblasti; pravým tlačítkem jde pozastavit 
 - Oprava se nijak nezvýrazní; zatím je vidět jen v popisku ikonky.
 - Ve Visual Studiu a VS Code kopíruje Ctrl+C bez označení celý řádek; to aplikace pozná a nic nepřepíše.
   Jiné editory s podobným chováním zatím nezná.
+
+## Licence
+
+[MIT](LICENSE)
