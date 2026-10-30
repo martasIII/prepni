@@ -28,4 +28,7 @@ public interface IKeyboardLayout
     string Name { get; }
 
     KeyOutput Type(Keystroke key);
+
+    /// <summary>Klávesa, která v tomto rozložení napíše daný znak (i mrtvou klávesu); <c>null</c>, když žádná.</summary>
+    Keystroke? Find(char c);
 }

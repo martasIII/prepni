@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Prepni.Core\Prepni.Core.csproj" />
@@ -10,6 +10,11 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.1.0</Version>
+    <Product>Přepni</Product>
+    <Description>Dvakrát Shift přepíše text napsaný ve špatném rozložení klávesnice.</Description>
+    <Authors>Martin Hájek</Authors>
+    <Copyright>© 2026 Martin Hájek</Copyright>
   </PropertyGroup>
 
 </Project>

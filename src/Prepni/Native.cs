@@ -19,6 +19,9 @@ internal static class Native
     public const uint LLKHF_INJECTED = 0x10;
 
     public const int VK_BACK = 0x08;
+    public const int VK_TAB = 0x09;
+    public const int VK_C = 0x43;
+    public const int VK_V = 0x56;
     public const int VK_SHIFT = 0x10;
     public const int VK_CONTROL = 0x11;
     public const int VK_MENU = 0x12;
@@ -32,6 +35,7 @@ internal static class Native
     public const int VK_LMENU = 0xA4;
     public const int VK_RMENU = 0xA5;
 
+    public const uint MAPVK_VK_TO_VSC = 0;
     public const uint MAPVK_VSC_TO_VK_EX = 3;
 
     /// <summary>ToUnicodeEx nemění stav klávesnice (rozepsanou mrtvou klávesu uživatele), Windows 10 1607+.</summary>
@@ -138,6 +142,12 @@ internal static class Native
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState,
         [Out] char[] pwszBuff, int cchBuff, uint wFlags, nint dwhkl);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern short VkKeyScanEx(char ch, nint dwhkl);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetClipboardSequenceNumber();
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);

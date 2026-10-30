@@ -1,15 +1,17 @@
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using Prepni.Core;
 
 namespace Prepni;
 
 /// <summary>
 /// Aplikace v oznamovací oblasti. Dvakrát Shift přepíše poslední slovo tak, jako by bylo napsané
-/// v druhém rozložení, a rozložení přepne; každé další dvojí klepnutí přibere další slovo.
+/// v druhém rozložení, a rozložení přepne; každé další dvojí klepnutí přibere další slovo. Když je místo
+/// psaní označený text, převede se celý.
 /// </summary>
 internal sealed class TrayApp : ApplicationContext
 {
-    private const string Hint = "Přepni: 2× Shift přepíše poslední slovo";
+    private const string Hint = "Přepni: 2× Shift přepíše poslední slovo nebo označený text";
 
     private readonly Layouts _layouts = new();
     private readonly KeyboardWatcher _watcher;
@@ -20,6 +22,7 @@ internal sealed class TrayApp : ApplicationContext
     private readonly Control _invoker = new();
 
     private int _words;
+    private bool _busy;
     private WindowsLayout? _target;
 
     public TrayApp()
@@ -37,8 +40,12 @@ internal sealed class TrayApp : ApplicationContext
             _icon!.Text = pause.Checked ? "Přepni: pozastaveno" : Hint;
         };
 
+        var autostart = new ToolStripMenuItem("Spouštět s Windows") { CheckOnClick = true, Checked = Autostart.IsEnabled };
+        autostart.CheckedChanged += (_, _) => Autostart.Set(autostart.Checked);
+
         var menu = new ContextMenuStrip();
         menu.Items.Add(pause);
+        menu.Items.Add(autostart);
         menu.Items.Add("Konec", null, (_, _) => ExitThread());
 
         _icon = new NotifyIcon
@@ -50,31 +57,72 @@ internal sealed class TrayApp : ApplicationContext
         };
     }
 
-    private void Retype()
+    private async void Retype()
     {
-        var window = Native.GetForegroundWindow();
-
-        // Při prvním klepnutí zvolíme cíl a držíme ho; po přepnutí by „druhé“ rozložení bylo zase to původní.
-        if (_words == 0)
-        {
-            _target = _layouts.Other(_layouts.Current(window));
-            if (_target is null)
-            {
-                _icon.ShowBalloonTip(3000, "Přepni", "Ve Windows je jen jedno rozložení klávesnice, není kam přepnout.", ToolTipIcon.Info);
-                return;
-            }
-        }
-
-        var retyping = _watcher.Text.Retype(_words + 1, _target!);
-        if (retyping is null)
+        // Převod označeného textu chvíli čeká na schránku; další klepnutí mezitím by ho zdvojilo.
+        if (_busy)
             return;
 
-        _words++;
-        Retyper.Apply(retyping);
-        if (_words == 1)
-            Retyper.SwitchLayout(window, _target!);
+        _busy = true;
+        try
+        {
+            var window = Native.GetForegroundWindow();
+            var current = _layouts.Current(window);
 
-        var change = $"{retyping.Original.Trim()} → {retyping.Text.Trim()}";
+            // Při prvním klepnutí zvolíme cíl a držíme ho; po přepnutí by „druhé“ rozložení bylo zase to původní.
+            if (_words == 0)
+            {
+                _target = _layouts.Other(current);
+                if (_target is null)
+                {
+                    _icon.ShowBalloonTip(3000, "Přepni", "Ve Windows je jen jedno rozložení klávesnice, není kam přepnout.", ToolTipIcon.Info);
+                    return;
+                }
+
+                // Nic nenapsáno od kliknutí nebo šipek: možná je označený text.
+                if (_watcher.Text.IsEmpty)
+                {
+                    await RetypeSelectionAsync(window, current, _target);
+                    return;
+                }
+            }
+
+            var retyping = _watcher.Text.Retype(_words + 1, _target!);
+            if (retyping is null)
+                return;
+
+            _words++;
+            Retyper.Apply(retyping);
+            if (_words == 1)
+                Retyper.SwitchLayout(window, _target!);
+
+            ShowChange(retyping.Original, retyping.Text);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RetypeSelectionAsync(nint window, WindowsLayout source, WindowsLayout target)
+    {
+        var selected = await Selection.CopyAsync();
+        if (selected is null)
+            return;
+
+        var retyped = Typist.Retype(selected, source, target);
+        if (retyped.Contains('\n') || retyped.Contains('\r'))
+            await Selection.PasteAsync(retyped);
+        else
+            Retyper.Type(retyped);
+
+        Retyper.SwitchLayout(window, target);
+        ShowChange(selected, retyped);
+    }
+
+    private void ShowChange(string original, string retyped)
+    {
+        var change = $"{original.Trim()} → {retyped.Trim()}".ReplaceLineEndings(" ");
         _icon.Text = change.Length <= 120 ? change : change[..119] + "…";
     }
 

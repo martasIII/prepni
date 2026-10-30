@@ -31,6 +31,17 @@ internal sealed class TableLayout : IKeyboardLayout
         return KeyOutput.None;
     }
 
+    public Keystroke? Find(char c)
+    {
+        foreach (var (key, output) in _keys)
+        {
+            if (output.Text == c.ToString())
+                return new Keystroke(key.Scan, key.Shift);
+        }
+
+        return null;
+    }
+
     /// <summary>Klávesy, které v tomto rozložení napíšou daný text (každý znak jednou klávesou).</summary>
     public IEnumerable<Keystroke> KeysFor(string text) => text.Select(c =>
     {

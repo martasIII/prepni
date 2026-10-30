@@ -40,6 +40,22 @@ internal sealed class WindowsLayout(nint handle) : IKeyboardLayout
         };
     }
 
+    public Keystroke? Find(char c)
+    {
+        var result = Native.VkKeyScanEx(c, Handle);
+        if (result == -1)
+            return null;
+
+        // Horní bajt: 1 Shift, 2 Ctrl, 4 Alt. Ctrl+Alt je AltGr; samotný Ctrl nebo Alt píše řídicí znaky.
+        var modifiers = (result >> 8) & 0xFF;
+        var altGr = (modifiers & 6) == 6;
+        if (!altGr && (modifiers & 6) != 0)
+            return null;
+
+        var scanCode = Native.MapVirtualKeyEx((uint)(result & 0xFF), Native.MAPVK_VK_TO_VSC, Handle);
+        return scanCode == 0 ? null : new Keystroke((ushort)scanCode, (modifiers & 1) != 0, altGr);
+    }
+
     private static string LanguageOf(nint handle)
     {
         try

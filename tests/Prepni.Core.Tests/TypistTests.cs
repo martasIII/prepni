@@ -59,4 +59,34 @@ public class TypistTests
 
         Assert.Equal("ˇx", Typist.Type(keys, Cs));
     }
+
+    [Theory]
+    [InlineData("ta 2 bude dost slo6it8", "ta ě bude dost složitá")]
+    [InlineData("Slo6it8 a [pln8", "Složitá a úplná")]
+    public void Selected_US_text_is_retyped_as_Czech(string selected, string meant)
+    {
+        Assert.Equal(meant, Typist.Retype(selected, Us, Cs));
+    }
+
+    [Theory]
+    [InlineData("total sum is +ěšč", "total sum is 1234")]
+    [InlineData("dobré ráno", "dobr0 r8no")]
+    public void Selected_Czech_text_is_retyped_as_US(string selected, string meant)
+    {
+        Assert.Equal(meant, Typist.Retype(selected, Cs, Us));
+    }
+
+    [Fact]
+    public void Letter_typed_with_a_dead_key_is_found_through_its_accent()
+    {
+        // „ó“ nemá na české klávesnici vlastní klávesu: píše se „´“ a „o“, v US z toho bude „=o“.
+        Assert.Equal("k=od", Typist.Retype("kód", Cs, Us));
+        Assert.Equal("kód", Typist.Retype("k=od", Us, Cs));
+    }
+
+    [Fact]
+    public void Line_breaks_and_unknown_characters_stay()
+    {
+        Assert.Equal("ž\r\ná 😀", Typist.Retype("6\r\n8 😀", Us, Cs));
+    }
 }
