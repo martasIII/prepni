@@ -1,5 +1,6 @@
 import { AbsoluteFill, Audio, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Caption, CaptionSpec } from "./Caption";
+import { Highlight, HighlightSpec } from "./Highlight";
 import { Intro } from "./Intro";
 import { Outro } from "./Outro";
 import { colors, fadeFrames, font, introFrames, outroFrames, sounds } from "./theme";
@@ -18,6 +19,8 @@ export type FullProps = {
   trimStart?: number;
   /** Titulky v sekundách původního záznamu (před zrychlením), třeba dvojí Shift ve chvíli, kdy ho uživatel dal. */
   captions?: CaptionSpec[];
+  /** Zvýraznění v záznamu (čas jako u titulků, souřadnice v pixelech záznamu), třeba přepnutí klávesnice. */
+  highlights?: HighlightSpec[];
   /** Rozměry záznamu; doplní calculateMetadata. */
   recordingWidth?: number;
   recordingHeight?: number;
@@ -36,6 +39,17 @@ const Fade: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames,
   return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
 
+/** Kam se záznam ve videu vejde: zvětšení a posun tak, aby výřez vyplnil video a byl uprostřed. */
+const placement = (crop: Crop | null | undefined, width: number, height: number) => {
+  const area = crop ?? { x: 0, y: 0, width, height };
+  const scale = Math.min(1920 / area.width, 1080 / area.height);
+  return {
+    scale,
+    left: (1920 - area.width * scale) / 2 - area.x * scale,
+    top: (1080 - area.height * scale) / 2 - area.y * scale,
+  };
+};
+
 /** Záznam zvětšený tak, aby výřez vyplnil video, a vycentrovaný. */
 const Recording: React.FC<{ src: string; crop?: Crop | null; width: number; height: number; speed: number; trimStart: number }> = ({
   src,
@@ -45,10 +59,7 @@ const Recording: React.FC<{ src: string; crop?: Crop | null; width: number; heig
   speed,
   trimStart,
 }) => {
-  const area = crop ?? { x: 0, y: 0, width, height };
-  const scale = Math.min(1920 / area.width, 1080 / area.height);
-  const left = (1920 - area.width * scale) / 2 - area.x * scale;
-  const top = (1080 - area.height * scale) / 2 - area.y * scale;
+  const { scale, left, top } = placement(crop, width, height);
 
   return (
     <AbsoluteFill style={{ background: colors.background, overflow: "hidden" }}>
@@ -98,6 +109,7 @@ export const Full: React.FC<FullProps> = ({
   speed = 1,
   trimStart = 0,
   captions = [],
+  highlights = [],
   recordingWidth = 1920,
   recordingHeight = 1080,
   recordingFrames = 450,
@@ -126,6 +138,16 @@ export const Full: React.FC<FullProps> = ({
         ) : (
           <Placeholder />
         )}
+        {highlights.map((highlight, i) => {
+          const { scale, left, top } = placement(crop, recordingWidth, recordingHeight);
+          const from = Math.round(((highlight.from - trimStart) / speed) * 30);
+          const frames = Math.round(((highlight.to - highlight.from) / speed) * 30);
+          return (
+            <Sequence key={`h${i}`} from={from} durationInFrames={frames}>
+              <Highlight x={left + highlight.x * scale} y={top + highlight.y * scale} label={highlight.label} frames={frames} />
+            </Sequence>
+          );
+        })}
         {captions.map((caption, i) => {
           const from = Math.round(((caption.from - trimStart) / speed) * 30);
           const frames = Math.round(((caption.to - caption.from) / speed) * 30);

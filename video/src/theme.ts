@@ -17,7 +17,7 @@ export const width = 1920;
 export const height = 1080;
 
 export const introFrames = 105;
-export const outroFrames = 120;
+export const outroFrames = 240;
 
 /** Zvuky z tools/jingle.py (vlastní 8bitová znělka a efekty). */
 export const sounds = {

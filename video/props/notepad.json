@@ -4,8 +4,29 @@
   "speed": 1.6,
   "trimStart": 0,
   "captions": [
-    { "from": 19.4, "to": 21.6, "text": "shift" },
-    { "from": 21.7, "to": 22.9, "text": "Označit vše" },
-    { "from": 22.9, "to": 25.4, "text": "shift" }
+    {
+      "from": 19.4,
+      "to": 21.6,
+      "text": "shift"
+    },
+    {
+      "from": 21.7,
+      "to": 22.9,
+      "text": "Označit vše"
+    },
+    {
+      "from": 22.9,
+      "to": 25.4,
+      "text": "shift"
+    }
+  ],
+  "highlights": [
+    {
+      "from": 20.3,
+      "to": 22.4,
+      "x": 479,
+      "y": 427,
+      "label": "ENG → CZ"
+    }
   ]
 }
