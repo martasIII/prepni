@@ -9,7 +9,8 @@ import { fps, height, introFrames, outroFrames, width } from "./theme";
 const fullMetadata: CalculateMetadataFunction<FullProps> = async ({ props }) => {
   try {
     const video = await getVideoMetadata(staticFile(props.recording));
-    const recordingFrames = Math.round(video.durationInSeconds * fps);
+    const seconds = (video.durationInSeconds - (props.trimStart ?? 0)) / (props.speed ?? 1);
+    const recordingFrames = Math.round(seconds * fps);
     return {
       durationInFrames: introFrames + recordingFrames + outroFrames,
       props: { ...props, recordingFrames, recordingWidth: video.width, recordingHeight: video.height, hasRecording: true },

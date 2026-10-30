@@ -1,0 +1,11 @@
+{
+  "recording": "recording.mp4",
+  "crop": null,
+  "speed": 1.6,
+  "trimStart": 0,
+  "captions": [
+    { "from": 19.4, "to": 21.6, "text": "shift" },
+    { "from": 21.7, "to": 22.9, "text": "Označit vše" },
+    { "from": 22.9, "to": 25.4, "text": "shift" }
+  ]
+}

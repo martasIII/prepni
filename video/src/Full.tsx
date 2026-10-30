@@ -1,4 +1,5 @@
 import { AbsoluteFill, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
+import { Caption, CaptionSpec } from "./Caption";
 import { Intro } from "./Intro";
 import { Outro } from "./Outro";
 import { colors, fadeFrames, font, introFrames, outroFrames } from "./theme";
@@ -9,8 +10,14 @@ export type Crop = { x: number; y: number; width: number; height: number };
 export type FullProps = {
   /** Záznam obrazovky v public/, třeba „recording.mp4“. */
   recording: string;
-  /** Výřez záznamu, třeba malý Notepad nad hlavním panelem s přepínačem klávesnice; bez něj celá obrazovka. */
-  crop?: Crop;
+  /** Výřez záznamu, třeba malý Notepad nad hlavním panelem s přepínačem klávesnice; null = celý záznam. */
+  crop?: Crop | null;
+  /** Zrychlení záznamu (1,5 = o polovinu rychleji), ať psaní netrvá dlouho. */
+  speed?: number;
+  /** Kolik sekund záznamu přeskočit na začátku. */
+  trimStart?: number;
+  /** Titulky v sekundách původního záznamu (před zrychlením), třeba dvojí Shift ve chvíli, kdy ho uživatel dal. */
+  captions?: CaptionSpec[];
   /** Rozměry záznamu; doplní calculateMetadata. */
   recordingWidth?: number;
   recordingHeight?: number;
@@ -30,7 +37,14 @@ const Fade: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames,
 };
 
 /** Záznam zvětšený tak, aby výřez vyplnil video, a vycentrovaný. */
-const Recording: React.FC<{ src: string; crop?: Crop; width: number; height: number }> = ({ src, crop, width, height }) => {
+const Recording: React.FC<{ src: string; crop?: Crop | null; width: number; height: number; speed: number; trimStart: number }> = ({
+  src,
+  crop,
+  width,
+  height,
+  speed,
+  trimStart,
+}) => {
   const area = crop ?? { x: 0, y: 0, width, height };
   const scale = Math.min(1920 / area.width, 1080 / area.height);
   const left = (1920 - area.width * scale) / 2 - area.x * scale;
@@ -38,7 +52,13 @@ const Recording: React.FC<{ src: string; crop?: Crop; width: number; height: num
 
   return (
     <AbsoluteFill style={{ background: colors.background, overflow: "hidden" }}>
-      <OffthreadVideo src={src} muted style={{ position: "absolute", left, top, width: width * scale, height: height * scale }} />
+      <OffthreadVideo
+        src={src}
+        muted
+        playbackRate={speed}
+        startFrom={Math.round(trimStart * 30)}
+        style={{ position: "absolute", left, top, width: width * scale, height: height * scale }}
+      />
     </AbsoluteFill>
   );
 };
@@ -52,6 +72,9 @@ const Placeholder: React.FC = () => (
 export const Full: React.FC<FullProps> = ({
   recording,
   crop,
+  speed = 1,
+  trimStart = 0,
+  captions = [],
   recordingWidth = 1920,
   recordingHeight = 1080,
   recordingFrames = 450,
@@ -67,10 +90,26 @@ export const Full: React.FC<FullProps> = ({
     <Sequence from={introFrames} durationInFrames={recordingFrames}>
       <Fade frames={recordingFrames}>
         {hasRecording ? (
-          <Recording src={staticFile(recording)} crop={crop} width={recordingWidth} height={recordingHeight} />
+          <Recording
+            src={staticFile(recording)}
+            crop={crop}
+            width={recordingWidth}
+            height={recordingHeight}
+            speed={speed}
+            trimStart={trimStart}
+          />
         ) : (
           <Placeholder />
         )}
+        {captions.map((caption, i) => {
+          const from = Math.round(((caption.from - trimStart) / speed) * 30);
+          const frames = Math.round(((caption.to - caption.from) / speed) * 30);
+          return (
+            <Sequence key={i} from={from} durationInFrames={frames}>
+              <Caption text={caption.text} frames={frames} />
+            </Sequence>
+          );
+        })}
       </Fade>
     </Sequence>
 
