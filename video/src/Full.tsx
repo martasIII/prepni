@@ -63,7 +63,7 @@ const Recording: React.FC<{ src: string; crop?: Crop | null; width: number; heig
   );
 };
 
-/** Znělka pod celým videem: pod záznamem tišší, na začátku a na konci se ztratí. */
+/** Znělka pod celým videem: pod záznamem tišší, v závěru jen o kousek hlasitější (víc trhalo uši), na začátku a na konci se ztratí. */
 const Music: React.FC<{ recordingFrames: number }> = ({ recordingFrames }) => {
   const { durationInFrames } = useVideoConfig();
   const recordingEnd = introFrames + recordingFrames;
@@ -72,11 +72,11 @@ const Music: React.FC<{ recordingFrames: number }> = ({ recordingFrames }) => {
     <Audio
       src={staticFile(sounds.music)}
       volume={(frame) => {
-        const duck = interpolate(frame, [introFrames - 10, introFrames + 10, recordingEnd - 10, recordingEnd + 10], [0.85, 0.45, 0.45, 0.85], {
+        const duck = interpolate(frame, [introFrames - 10, introFrames + 10, recordingEnd - 10, recordingEnd + 10], [0.85, 0.45, 0.45, 0.5], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         });
-        const fade = interpolate(frame, [0, 8, durationInFrames - 30, durationInFrames], [0, 1, 1, 0], {
+        const fade = interpolate(frame, [0, 8, durationInFrames - 50, durationInFrames], [0, 1, 1, 0], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
         });

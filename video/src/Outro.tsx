@@ -16,13 +16,13 @@ export const Outro: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: colors.background, fontFamily: font, alignItems: "center", justifyContent: "center", gap: 64 }}>
       <Sequence from={20} durationInFrames={10}>
-        <Audio src={staticFile(sounds.tap)} />
+        <Audio src={staticFile(sounds.tap)} volume={0.5} />
       </Sequence>
       <Sequence from={30} durationInFrames={10}>
-        <Audio src={staticFile(sounds.tap)} />
+        <Audio src={staticFile(sounds.tap)} volume={0.5} />
       </Sequence>
       <Sequence from={46} durationInFrames={20}>
-        <Audio src={staticFile(sounds.success)} />
+        <Audio src={staticFile(sounds.success)} volume={0.45} />
       </Sequence>
 
       <div style={{ fontSize: 110, fontWeight: 600, color: colors.text, opacity: heading, transform: `translateY(${(1 - heading) * 20}px)` }}>
