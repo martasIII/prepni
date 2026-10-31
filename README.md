@@ -9,6 +9,8 @@ retypes it as you meant it, then switches the layout so you can keep typing.
 
 ![Typing Czech on a US layout, then double Shift: "p5eh8+nky" becomes "přeháňky" and the layout switches to Czech](assets/demo.gif)
 
+▶ [30-second video on YouTube](https://youtu.be/mPb9Ls7TXOU)
+
 - **Last word:** double Shift fixes the word you just typed. Each further double Shift takes one more word,
   so you fix exactly as much as you need ("ta 2 bude dost slo6it8": the real "2" stays a 2).
 - **Selection:** select any text and double Shift converts all of it. The direction is decided by the text,

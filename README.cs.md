@@ -9,6 +9,8 @@ Napsal jsi `slo6it8`, protože byla zapnutá anglická klávesnice? **Dvakrát k
 
 ![Psaní česky na anglické klávesnici a dvakrát Shift: z „p5eh8+nky“ je „přeháňky“ a klávesnice se přepne](assets/demo.gif)
 
+▶ [Video na YouTube (30 s)](https://youtu.be/mPb9Ls7TXOU)
+
 Každé další dvojí klepnutí přibere o slovo víc, takže jde opravit i celá věta, ale jen tak daleko, jak chceš
 („ta 2 bude dost slo6it8“: dvojka zůstane dvojkou). Delší text stačí **označit** a dvakrát klepnout na Shift:
 převede se celý, a správným směrem i napůl opravená věta. A když se oprava nepovede, vrátí ji Ctrl+Z.
